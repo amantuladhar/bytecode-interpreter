@@ -1,18 +1,30 @@
 const std = @import("std");
-const Allocator = std.mem.Allocator;
 const memory = @import("memory.zig");
+const Value = @import("value.zig").Value;
+const ValueArray = @import("value.zig").ValueArray;
 
-pub const OpCode = enum { OpReturn, Test1, Test2 };
+const Allocator = std.mem.Allocator;
+
+pub const OpCode = enum {
+    OpConstant,
+    OpReturn,
+};
+
+pub const ChunkValue = union(enum) {
+    opCode: OpCode,
+    usize: usize,
+};
 
 pub const Chunk = struct {
     const Self = @This();
-    const CodeType = OpCode;
+    const CodeType = ChunkValue;
 
     code: ?[]CodeType,
+    constants: ValueArray,
+    lines: ?[]usize,
     capacity: usize,
     count: usize,
     allocator: Allocator,
-
 
     pub fn init(allocator: Allocator) Self {
         const self = Self{
@@ -20,35 +32,35 @@ pub const Chunk = struct {
             .capacity = 0,
             .count = 0,
             .code = null,
+            .constants = ValueArray.init(allocator),
+            .lines = null,
         };
         return self;
     }
+
     pub fn free(self: *Self) void {
+        self.constants.free();
         _ = try memory.freeArray(CodeType, self.allocator, self.code, self.capacity);
+        _ = try memory.freeArray(usize, self.allocator, self.lines, self.capacity);
         self.capacity = 0;
         self.count = 0;
         self.code = null;
     }
-    pub fn write(self: *Self, byte: CodeType) !void {
+
+    pub fn write(self: *Self, byte: CodeType, line: usize) !void {
         if (self.count >= self.capacity) {
             const old_capacity = self.capacity;
             self.capacity = memory.growCapacity(old_capacity);
             self.code = try memory.growArray(CodeType, self.allocator, self.code, old_capacity, self.capacity);
+            self.lines = try memory.growArray(usize, self.allocator, self.lines, old_capacity, self.capacity);
         }
         self.code.?[self.count] = byte;
+        self.lines.?[self.count] = line;
         self.count += 1;
     }
+
+    pub fn addConstant(self: *Self, byte: Value) !usize {
+        try self.constants.write(byte);
+        return self.constants.count - 1;
+    }
 };
-
-test "chunk" {
-    const testing = std.testing;
-    const allocator = testing.allocator;
-
-    var chunk = Chunk.init(allocator);
-    defer chunk.free();
-    try chunk.write(OpCode.OpReturn);
-    try chunk.write(OpCode.OpReturn);
-    try chunk.write(OpCode.OpReturn);
-    try chunk.write(OpCode.OpReturn);
-    try chunk.write(OpCode.OpReturn);
-}

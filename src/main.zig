@@ -15,7 +15,16 @@ pub fn main() void {
 
     var chunk = Chunk.init(allocator);
     defer chunk.free();
-    try chunk.write(OpCode.OpReturn);
+
+    var constant_offset = try chunk.addConstant(1.2);
+    try chunk.write(.{ .opCode = .OpConstant }, 123);
+    try chunk.write(.{ .usize = constant_offset }, 123);
+
+    constant_offset = try chunk.addConstant(1000.1);
+    try chunk.write(.{ .opCode = .OpConstant }, 123);
+    try chunk.write(.{ .usize = constant_offset }, 123);
+
+    try chunk.write(.{ .opCode = OpCode.OpReturn }, 123);
 
     debug.disassembleChunk(&chunk, "test chunk");
 }
