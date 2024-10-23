@@ -2,6 +2,7 @@ const std = @import("std");
 const Chunk = @import("chunk.zig").Chunk;
 const OpCode = @import("chunk.zig").OpCode;
 const debug = @import("debug.zig");
+const Vm = @import("vm.zig").Vm;
 
 pub fn main() void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
@@ -12,6 +13,7 @@ pub fn main() void {
         }
         std.debug.print("\n🟢🟢🟢 PROGRAM EXITED SUCCESSFULLY 🟢🟢🟢\n", .{});
     }
+
 
     var chunk = Chunk.init(allocator);
     defer chunk.free();
@@ -25,6 +27,10 @@ pub fn main() void {
     try chunk.write(.{ .usize = constant_offset }, 123);
 
     try chunk.write(.{ .opCode = OpCode.OpReturn }, 123);
+
+    var vm = Vm.init(allocator, &chunk);
+    defer vm.free();
+    _ = vm.interpret();
 
     debug.disassembleChunk(&chunk, "test chunk");
 }

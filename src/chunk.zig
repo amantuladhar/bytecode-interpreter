@@ -19,9 +19,13 @@ pub const Chunk = struct {
     const Self = @This();
     const CodeType = ChunkValue;
 
-    code: ?[]CodeType,
+    code: []CodeType,
     constants: ValueArray,
-    lines: ?[]usize,
+    // TODO: Update to use RLE so we don't store same data multiple times
+    // This is reduce the memory we need
+    // Also, RLE might be bit constly, but will get called only when exception occur,
+    // So it doesn't affect runtime performance on critical areas
+    lines: []usize,
     capacity: usize,
     count: usize,
     allocator: Allocator,
@@ -31,9 +35,9 @@ pub const Chunk = struct {
             .allocator = allocator,
             .capacity = 0,
             .count = 0,
-            .code = null,
+            .code = memory.growArray(CodeType, allocator, null, 0, 8),
             .constants = ValueArray.init(allocator),
-            .lines = null,
+            .line = memory.growArray(usize, allocator, null, 0, 8),
         };
         return self;
     }
@@ -51,11 +55,23 @@ pub const Chunk = struct {
         if (self.count >= self.capacity) {
             const old_capacity = self.capacity;
             self.capacity = memory.growCapacity(old_capacity);
-            self.code = try memory.growArray(CodeType, self.allocator, self.code, old_capacity, self.capacity);
-            self.lines = try memory.growArray(usize, self.allocator, self.lines, old_capacity, self.capacity);
+            self.code = try memory.growArray(
+                CodeType,
+                self.allocator,
+                self.code,
+                old_capacity,
+                self.capacity,
+            );
+            self.lines = try memory.growArray(
+                usize,
+                self.allocator,
+                self.lines,
+                old_capacity,
+                self.capacity,
+            );
         }
-        self.code.?[self.count] = byte;
-        self.lines.?[self.count] = line;
+        self.code[self.count] = byte;
+        self.lines[self.count] = line;
         self.count += 1;
     }
 

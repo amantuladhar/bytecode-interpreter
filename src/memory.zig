@@ -22,6 +22,9 @@ pub fn reallocate(comptime T: type, allocator: Allocator, ptr: ?[]T, old_size: u
         allocator.free(ptr.?);
         return null;
     }
+    if (new_size == 0 and ptr == null) {
+        return null;
+    }
     return allocator.alloc(T, new_size) catch |err| {
         std.debug.panic("unable to allocate!!!. {any}", .{err});
     };
