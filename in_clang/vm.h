@@ -6,6 +6,7 @@
 
 #define STACK_MAX 256
 
+// TODO:: This is stack based bytecode, learn register based bytecode
 
 typedef struct {
     Chunk* chunk;
