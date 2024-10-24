@@ -4,6 +4,10 @@ const ValueArr = @import("ValueArr.zig");
 
 pub const OpCode = enum {
     Constant,
+    Add,
+    Subtract,
+    Multiply,
+    Divide,
     Negate,
     Return,
 };

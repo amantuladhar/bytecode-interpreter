@@ -1,100 +1,123 @@
 const std = @import("std");
 const Chunk = @import("Chunk.zig");
 const Value = @import("ValueArr.zig").Value;
+const printValue = @import("ValueArr.zig").printValue;
+const print = std.debug.print;
 
 const MAX_STACK_SIZE = 256;
 
-pub const Result = enum { Ok, CompileError, RuntimeError };
+pub const InterpretResult = enum { Ok, CompileError, RuntimeError };
 
-pub const VM = struct {
-    const Self = @This();
+const Self = @This();
 
-    chunk: *Chunk,
-    ip: [*]Chunk.ChunkValue,
-    stack: [256]Value = undefined,
-    stack_top: ?[*]Value,
+chunk: *Chunk,
+ip: usize,
+stack: [MAX_STACK_SIZE]Value = undefined,
+stack_top: usize,
 
-    pub fn init(chunk: *Chunk) Self {
-        const ip = chunk.code.ptr;
-        return Self{
-            .chunk = chunk,
-            .ip = ip,
-            .stack_top = null,
-        };
-    }
+pub fn init(chunk: *Chunk) Self {
+    return Self{
+        .chunk = chunk,
+        .ip = 0,
+        .stack_top = 0,
+    };
+}
 
-    pub fn deinit(self: *Self) void {
-        self.ip = self.chunk.code.ptr;
-        self.stack_top = null;
-        self.stack = undefined;
-    }
+pub fn deinit(self: *Self) void {
+    self.ip = 0;
+    self.stack = undefined;
+    self.stack_top = 0;
+}
 
-    pub fn interpret(self: *Self) void {
-        while (true) {
-            const inst = self.readByte().*;
-            std.debug.print("{any}\n", .{inst});
-
-            switch (inst) {
-                .OpCode => |op_code| {
-                    switch (op_code) {
-                        .Constant => {
-                            const constant = self.readConstant();
-                            self.push(constant);
-                        },
-                        .Negate => {},
-                        .Return => {},
-                    }
-                },
-                .Constant => {
-                    @breakpoint();
-                    @panic("this is unrechable, opcode should have consumed this chunk");
-                },
-            }
-        }
-    }
-
-    fn readByte(self: *Self) *Chunk.ChunkValue {
-        const inst = &self.ip[0];
-        self.ip += 1;
-        return inst;
-    }
-    fn readConstant(self: *Self) Value {
-        const offset = self.readByte().*;
-        if (offset != .Constant) {
+pub fn interpret(self: *Self) InterpretResult {
+    while (true) {
+        const inst = self.readByte().*;
+        if (inst != .OpCode) {
             @breakpoint();
-            @panic("This should be a constant");
+            @panic("this is unrechable, opcode should have consumed this chunk");
         }
-        const constant = self.chunk.constants.values[offset.Constant];
-        return constant;
+        switch (inst.OpCode) {
+            .Constant => {
+                const constant = self.readConstant();
+                self.push(constant);
+            },
+            .Add, .Subtract, .Multiply, .Divide => {
+                const b = self.pop();
+                const a = self.pop();
+                const result = switch (inst.OpCode) {
+                    .Add => a + b,
+                    .Subtract => a - b,
+                    .Multiply => a * b,
+                    .Divide => a / b,
+                    // unreachable so random value to return float
+                    else => 0.0,
+                };
+                self.push(result);
+            },
+            .Negate => {
+                self.push(-self.pop());
+            },
+            .Return => {
+                printValue(self.pop());
+                std.debug.print("\n", .{});
+                return .Ok;
+            },
+        }
     }
+}
 
-    fn push(self: *Self, value: Value) void {
-        if (self.stack_top) |top| {
-            top[0].* = value;
-            return;
-        } else {
-            self.stack[0] = value;
-            const x = &self.stack[0];
-            self.stack_top = x;
-        }
-        const one: usize = 1;
-        self.stack_top.? += one;
+fn readByte(self: *Self) *Chunk.ChunkValue {
+    const inst = &self.chunk.code[self.ip];
+    self.ip += 1;
+    return inst;
+}
+fn readConstant(self: *Self) Value {
+    const offset = self.readByte().*;
+    if (offset != .Constant) {
+        @breakpoint();
+        @panic("This should be a constant");
     }
-};
+    const constant = self.chunk.constants.values[offset.Constant];
+    return constant;
+}
+
+fn push(self: *Self, value: Value) void {
+    self.stack[self.stack_top] = value;
+    self.stack_top += 1;
+}
+
+fn pop(self: *Self) Value {
+    self.stack_top -= 1;
+    const inst = self.stack[self.stack_top];
+    return inst;
+}
 
 test "test vm" {
     const testing = std.testing;
     const allocator = std.testing.allocator;
+    print("\n", .{});
 
     var chunk = try Chunk.init(allocator);
     defer chunk.deinit();
 
     try chunk.writeConstant(1.2, 123);
+    try chunk.writeConstant(2.3, 123);
+    try chunk.write(.{ .OpCode = .Add }, 123);
+
+    try chunk.writeConstant(2.3, 123);
+    try chunk.write(.{ .OpCode = .Subtract }, 123);
+
+    try chunk.writeConstant(1.2, 123);
+    try chunk.write(.{ .OpCode = .Divide }, 123);
+
+    try chunk.writeConstant(10, 123);
+    try chunk.write(.{ .OpCode = .Multiply }, 123);
+
     try chunk.write(.{ .OpCode = .Negate }, 123);
     try chunk.write(.{ .OpCode = .Return }, 123);
 
-    var vm = VM.init(&chunk);
-    vm.interpret();
+    var vm = Self.init(&chunk);
+    _ = vm.interpret();
 
     try testing.expect(true);
 }

@@ -24,6 +24,10 @@ pub fn disassembleInstruction(chunk: *const Chunk, offset: usize) usize {
             switch (code) {
                 .Return => return simpleInstruction("Return", offset),
                 .Negate => return simpleInstruction("Negate", offset),
+                .Add => return simpleInstruction("Add", offset),
+                .Subtract => return simpleInstruction("Subtract", offset),
+                .Multiply => return simpleInstruction("Multiply", offset),
+                .Divide => return simpleInstruction("Divide", offset),
                 .Constant => return complexInstruction("Constant", chunk, offset),
             }
         },
