@@ -5,5 +5,5 @@ set(CMAKE_C_STANDARD 17)
 
 add_executable(clox main.c
     common.h debug.h debug.c chunk.h chunk.c memory.h memory.c
-    value.c value.h
+    value.c value.h vm.h vm.c
 )
