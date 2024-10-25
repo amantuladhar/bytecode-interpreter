@@ -9,12 +9,11 @@
 // TODO:: This is stack based bytecode, learn register based bytecode
 
 typedef struct {
-    Chunk* chunk;
-    uint8_t* ip;
+    Chunk *chunk;
+    uint8_t *ip;
     Value stack[STACK_MAX];
-    Value* stackTop;
+    Value *stackTop;
 } VM;
-
 
 typedef enum {
     INTERPRET_OK,
@@ -22,10 +21,9 @@ typedef enum {
     INTERPRET_RUNTIME_ERROR,
 } InterpretResult;
 
-
 void initVM();
 void freeVM();
-InterpretResult interpret(Chunk* chunk);
+InterpretResult interpret(const char *source);
 void push(Value value);
 Value pop();
 

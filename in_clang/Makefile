@@ -1,9 +1,9 @@
 CMAKE=CMAKE
 BUILD_DIR=./build-debug
-
+ARGS=
 
 run: build-debug
-	$(BUILD_DIR)/clox
+	$(BUILD_DIR)/clox $(ARGS)
 
 build-debug:
 	mkdir -p $(BUILD_DIR)
