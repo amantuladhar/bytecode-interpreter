@@ -1,4 +1,5 @@
 const std = @import("std");
+const Allocator = std.mem.Allocator;
 const Chunk = @import("Chunk.zig");
 const OpCode = @import("Chunk.zig").OpCode;
 const debug = @import("debug.zig");
@@ -13,30 +14,15 @@ pub fn main() !void {
         }
         std.debug.print("\n🟢🟢🟢 PROGRAM EXITED SUCCESSFULLY 🟢🟢🟢\n", .{});
     }
+    try repl(allocator);
+}
 
-    var chunk = try Chunk.init(allocator);
-    defer chunk.deinit();
+fn repl(allocator: Allocator) !void {
+    _ = allocator;
+    const sout = std.io.getStdOut().writer();
+    try sout.print("> ", .{});
 
-    try chunk.writeConstant(1.2, 123);
-    try chunk.writeConstant(2.3, 123);
-    try chunk.write(.{ .OpCode = .Add }, 123);
-
-    try chunk.writeConstant(2.3, 123);
-    try chunk.write(.{ .OpCode = .Subtract }, 123);
-
-    try chunk.writeConstant(1.2, 123);
-    try chunk.write(.{ .OpCode = .Divide }, 123);
-
-    try chunk.writeConstant(10, 123);
-    try chunk.write(.{ .OpCode = .Multiply }, 123);
-
-    try chunk.write(.{ .OpCode = .Negate }, 123);
-    try chunk.write(.{ .OpCode = .Return }, 123);
-
-    debug.disassembleChunk(&chunk, "test chunk");
-
-    std.debug.print("\n===== INTERPRETER =====\n", .{});
-
-    var vm = VM.init(&chunk);
-    _ = vm.interpret();
+    var line: [1024]u8 = undefined;
+    const read_count = try std.io.getStdIn().read(&line);
+    try sout.print("{s}", .{line[0..read_count]});
 }
