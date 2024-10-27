@@ -10,4 +10,4 @@ build-debug:
 	$(CMAKE) -S . -B $(BUILD_DIR)
 	$(CMAKE) --build $(BUILD_DIR)
 
-.PHONY: run
+.PHONY: run build-debug
