@@ -24,9 +24,9 @@ typedef struct {
     int capacity;
 } Chunk;
 
-void initChunk(Chunk *chunk);
-void freeChunk(Chunk *chunk);
-void writeChunk(Chunk *chunk, uint8_t byte, int line);
-int addConstant(Chunk *chunk, Value value);
+void Chunk_init(Chunk *chunk);
+void Chunk_free(Chunk *chunk);
+void Chunk_write(Chunk *chunk, uint8_t byte, int line);
+int Chunk_addConstant(Chunk *chunk, Value value);
 
 #endif

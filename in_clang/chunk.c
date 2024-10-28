@@ -4,22 +4,22 @@
 #include "memory.h"
 #include "value.h"
 
-void initChunk(Chunk *chunk) {
+void Chunk_init(Chunk *chunk) {
     chunk->count = 0;
     chunk->capacity = 0;
     chunk->code = NULL;
     chunk->lines = NULL;
-    initValueArray(&chunk->constants);
+    ValueArray_init(&chunk->constants);
 }
 
-void freeChunk(Chunk *chunk) {
-    freeValueArray(&chunk->constants);
+void Chunk_free(Chunk *chunk) {
+    ValueArray_free(&chunk->constants);
     FREE_ARRAY(uint8_t, chunk->code, chunk->capacity);
     FREE_ARRAY(uint8_t, chunk->lines, chunk->capacity);
-    initChunk(chunk);
+    Chunk_init(chunk);
 }
 
-void writeChunk(Chunk *chunk, uint8_t byte, int line) {
+void Chunk_write(Chunk *chunk, uint8_t byte, int line) {
     if (chunk->count >= chunk->capacity) {
         int old_capacity = chunk->capacity;
         chunk->capacity = GROW_CAPACITY(old_capacity);
@@ -33,7 +33,7 @@ void writeChunk(Chunk *chunk, uint8_t byte, int line) {
     chunk->count++;
 }
 
-int addConstant(Chunk *chunk, Value value) {
-    writeValueArray(&chunk->constants, value);
+int Chunk_addConstant(Chunk *chunk, Value value) {
+    ValueArray_write(&chunk->constants, value);
     return chunk->constants.count - 1;
 }
