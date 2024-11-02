@@ -2,7 +2,6 @@ const std = @import("std");
 const Chunk = @import("Chunk.zig");
 const Value = @import("ValueArr.zig").Value;
 const printValue = @import("ValueArr.zig").printValue;
-const print = std.debug.print;
 
 const MAX_STACK_SIZE = 256;
 
@@ -95,7 +94,7 @@ fn pop(self: *Self) Value {
 test "test vm" {
     const testing = std.testing;
     const allocator = std.testing.allocator;
-    print("\n", .{});
+    std.debug.print("\n", .{});
 
     var chunk = try Chunk.init(allocator);
     defer chunk.deinit();
@@ -116,7 +115,7 @@ test "test vm" {
     try chunk.write(.{ .OpCode = .Negate }, 123);
     try chunk.write(.{ .OpCode = .Return }, 123);
 
-    var vm = Self.init(&chunk);
+    var vm = init(&chunk);
     _ = vm.interpret();
 
     try testing.expect(true);

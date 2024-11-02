@@ -4,11 +4,18 @@ const ValueArr = @import("ValueArr.zig");
 
 pub const OpCode = enum {
     Constant,
+    Nil,
+    True,
+    False,
     Add,
     Subtract,
     Multiply,
     Divide,
+    Not,
     Negate,
+    Equal,
+    Greater,
+    Less,
     Return,
 };
 
@@ -21,7 +28,7 @@ pub const ChunkValue = union(enum) {
 const Self = @This();
 
 code: []ChunkValue,
-lines: []u16,
+lines: []usize,
 constants: ValueArr,
 capacity: usize,
 len: usize,
@@ -34,7 +41,7 @@ pub fn init(allocator: Allocator) !Self {
         .capacity = initial_cap,
         .len = 0,
         .code = try allocator.alloc(ChunkValue, initial_cap),
-        .lines = try allocator.alloc(u16, initial_cap),
+        .lines = try allocator.alloc(usize, initial_cap),
         .constants = try ValueArr.init(allocator),
     };
 }
@@ -47,7 +54,7 @@ pub fn deinit(self: *Self) void {
     self.allocator.free(self.lines);
 }
 
-pub fn write(self: *Self, chunk: ChunkValue, line: u16) !void {
+pub fn write(self: *Self, chunk: ChunkValue, line: usize) !void {
     if (self.len >= self.capacity) {
         self.capacity = self.capacity * 2;
         self.code = try self.allocator.realloc(self.code, self.capacity);

@@ -15,11 +15,13 @@ static void repl() {
     //         break;
     //     }
     // }
-    interpret("2 * 3 + 4 * 5");
+    printf("\n ==== Interpret Start === \n");
+    // interpret("!(5 - 4 > 3 * 2 == !nil)");
+    interpret("5 + 10 * 15");
 }
 
-static char *readFile(const char *path) {
-    FILE *file = fopen(path, "rb");
+static char* readFile(const char* path) {
+    FILE* file = fopen(path, "rb");
     if (file == NULL) {
         fprintf(stderr, "Couldn't open the file '%s'.\n", path);
         exit(74);
@@ -29,10 +31,9 @@ static char *readFile(const char *path) {
     size_t file_size = ftell(file);
     rewind(file);
 
-    char *buffer = malloc(file_size + 1);
+    char* buffer = malloc(file_size + 1);
     if (buffer == NULL) {
-        fprintf(stderr, "Couldn't allocate the buffer to read source file '%s'",
-                path);
+        fprintf(stderr, "Couldn't allocate the buffer to read source file '%s'", path);
         exit(74);
     }
     size_t bytes_read = fread(buffer, sizeof(char), file_size, file);
@@ -47,19 +48,17 @@ static char *readFile(const char *path) {
     return buffer;
 }
 
-static void runFile(const char *path) {
-    char *source = readFile(path);
+static void runFile(const char* path) {
+    char* source = readFile(path);
     InterpretResult result = interpret(source);
 
     free(source);
 
-    if (result == INTERPRET_RUNTIME_ERROR)
-        exit(65);
-    if (result == INTERPRET_COMPILE_ERROR)
-        exit(70);
+    if (result == INTERPRET_RUNTIME_ERROR) exit(65);
+    if (result == INTERPRET_COMPILE_ERROR) exit(70);
 }
 
-int main(const int argc, const char *argv[]) {
+int main(const int argc, const char* argv[]) {
     printf("-- PROGRAM STARTED --\n");
     printf("------------------\n\n");
 

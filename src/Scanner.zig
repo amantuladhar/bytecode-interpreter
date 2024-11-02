@@ -9,13 +9,14 @@ current: usize,
 line: usize,
 
 pub fn init(source: []const u8) Self {
-    return Self{
+    return .{
         .source = source,
         .start = 0,
         .current = 0,
         .line = 1,
     };
 }
+
 pub fn scanToken(s: *Self) Token {
     s.skipIgnoredChars();
     s.start = s.current;
@@ -206,11 +207,14 @@ pub fn skipIgnoredChars(s: *Self) void {
     }
 }
 
-pub fn isAtEnd(s: *Self) bool {
+pub fn isAtEnd(s: *const Self) bool {
     return s.current >= s.source.len;
 }
 
 pub fn peek(s: *const Self, offset: usize) u8 {
+    if (s.isAtEnd()) {
+        return 0;
+    }
     return s.source[s.current + offset];
 }
 
@@ -267,6 +271,7 @@ test "basic" {
     try testing.expectEqualSlices(u8, t.text, "1");
     try testing.expectEqual(t.type, .Number);
 }
+
 test "keywords" {
     const testing = std.testing;
 

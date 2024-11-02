@@ -4,7 +4,7 @@ type: TokenType,
 line: usize,
 text: []const u8,
 
-pub const TokenType = enum {
+pub const TokenType = enum(u8) {
     // single char tokens
     LeftParen,
     RightParen,
