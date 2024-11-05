@@ -73,7 +73,8 @@ fn parsePrecedence(s: *Self, rbp: Precedence) void {
     }
     while (@intFromEnum(rbp) <= @intFromEnum(RULES[@intFromEnum(s.parser.current.type)].precedence)) {
         s.advance();
-        parse_rule.infix.?(s);
+        const rule = RULES[@intFromEnum(s.parser.previous.?.type)];
+        rule.infix.?(s);
     }
 }
 
@@ -253,19 +254,61 @@ const Parser = struct {
     panicMode: bool = false,
 };
 
-test "test single token number" {
-    const testing = std.testing;
-    const allocator = testing.allocator;
-    const source = "5";
+test "compile expressions" {
+    const TestInstruction = struct {
+        chunk: ChunkValue,
+        constant: ?Value = null,
+    };
 
-    var chunk = try Chunk.init(allocator);
-    defer chunk.deinit();
+    const allocator = std.testing.allocator;
 
-    var compiler = try init(allocator, source, &chunk);
-    defer compiler.deinit();
-    compiler.compile();
+    const TestCase = struct {
+        source: []const u8,
+        expected: []const TestInstruction,
+    };
 
-    try testing.expectEqual(chunk.len, 3);
+    const test_cases = [_]TestCase{
+        // Single number
+        .{
+            .source = "5",
+            .expected = &[_]TestInstruction{
+                .{ .chunk = .{ .OpCode = .Constant } },
+                .{ .chunk = .{ .Constant = 0 }, .constant = 5 },
+                .{ .chunk = .{ .OpCode = .Return } },
+            },
+        },
+        // Binary expression
+        .{
+            .source = "5 + 10",
+            .expected = &[_]TestInstruction{
+                .{ .chunk = .{ .OpCode = .Constant } },
+                .{ .chunk = .{ .Constant = 0 }, .constant = 5 },
+                .{ .chunk = .{ .OpCode = .Constant } },
+                .{ .chunk = .{ .Constant = 1 }, .constant = 10 },
+                .{ .chunk = .{ .OpCode = .Add } },
+                .{ .chunk = .{ .OpCode = .Return } },
+            },
+        },
+    };
 
-    // try testing.expect(chunk.code[0] == .Constant);
+    for (test_cases) |case| {
+        const source = case.source;
+        const expected = case.expected;
+
+        var chunk = try Chunk.init(allocator);
+        defer chunk.deinit();
+
+        var compiler = try init(allocator, source, &chunk);
+        defer compiler.deinit();
+        compiler.compile();
+
+        try std.testing.expectEqual(expected.len, chunk.len);
+
+        for (expected, chunk.code[0..chunk.len]) |exp, actual| {
+            try std.testing.expectEqual(exp.chunk, actual);
+            if (exp.constant) |constant| {
+                try std.testing.expectEqual(chunk.constants.values[exp.chunk.Constant], constant);
+            }
+        }
+    }
 }
