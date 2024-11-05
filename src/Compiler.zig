@@ -101,8 +101,8 @@ const RULES: [precedence_fields.len]ParseRule = blk: {
             .Minus => .{ .prefix = unary, .infix = binary, .precedence = .Term },
             .Plus => .{ .infix = binary, .precedence = .Term },
             .Semicolon => .{},
-            .Slash => .{},
-            .Star => .{},
+            .Slash => .{ .infix = binary, .precedence = .Factor },
+            .Star => .{ .infix = binary, .precedence = .Factor },
             .Bang => .{},
             .BangEqual => .{},
             .Equal => .{},
@@ -289,6 +289,21 @@ test "compile expressions" {
                 .{ .chunk = .{ .OpCode = .Return } },
             },
         },
+        // Chained binary
+        .{ .source = "5 + 10 * 5 / 20", .expected = &[_]TestInstruction{
+            .{ .chunk = .{ .OpCode = .Constant } },
+            .{ .chunk = .{ .Constant = 0 }, .constant = 5 },
+            .{ .chunk = .{ .OpCode = .Constant } },
+            .{ .chunk = .{ .Constant = 1 }, .constant = 10 },
+            .{ .chunk = .{ .OpCode = .Constant } },
+            .{ .chunk = .{ .Constant = 2 }, .constant = 5 },
+            .{ .chunk = .{ .OpCode = .Multiply } },
+            .{ .chunk = .{ .OpCode = .Constant } },
+            .{ .chunk = .{ .Constant = 3 }, .constant = 20 },
+            .{ .chunk = .{ .OpCode = .Divide } },
+            .{ .chunk = .{ .OpCode = .Add } },
+            .{ .chunk = .{ .OpCode = .Return } },
+        } },
     };
 
     for (test_cases) |case| {
@@ -303,7 +318,6 @@ test "compile expressions" {
         compiler.compile();
 
         try std.testing.expectEqual(expected.len, chunk.len);
-
         for (expected, chunk.code[0..chunk.len]) |exp, actual| {
             try std.testing.expectEqual(exp.chunk, actual);
             if (exp.constant) |constant| {

@@ -200,6 +200,8 @@ pub fn skipIgnoredChars(s: *Self) void {
                     while (s.peek(0) != '\n' and !s.isAtEnd()) {
                         _ = s.consume();
                     }
+                } else {
+                    return;
                 }
             },
             else => return,
