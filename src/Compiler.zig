@@ -106,7 +106,7 @@ const RULES: [precedence_fields.len]ParseRule = blk: {
             .Bang => .{},
             .BangEqual => .{},
             .Equal => .{},
-            .EqualEqual => .{},
+            .EqualEqual => .{ .infix = binary, .precedence = .Equality },
             .Greater => .{},
             .GreaterEqual => .{},
             .Less => .{},
@@ -160,7 +160,7 @@ fn binary(s: *Self) void {
     s.parsePrecedence(@enumFromInt(@intFromEnum(rule.precedence) + 1));
     switch (token_type) {
         .BangEqual => s.emitOpCodes(.Equal, .Not),
-        .Equal => s.emitOpCode(.Equal),
+        .EqualEqual => s.emitOpCode(.Equal),
         .Greater => s.emitOpCode(.Greater),
         .GreaterEqual => s.emitOpCodes(.Less, .Not),
         .Less => s.emitOpCode(.Less),
@@ -255,17 +255,9 @@ const Parser = struct {
 };
 
 test "compile expressions" {
-    const TestInstruction = struct {
-        chunk: ChunkValue,
-        constant: ?Value = null,
-    };
-
     const allocator = std.testing.allocator;
-
-    const TestCase = struct {
-        source: []const u8,
-        expected: []const TestInstruction,
-    };
+    const TestInstruction = struct { chunk: ChunkValue, constant: ?Value = null };
+    const TestCase = struct { source: []const u8, expected: []const TestInstruction };
 
     const test_cases = [_]TestCase{
         // Single number
@@ -290,20 +282,35 @@ test "compile expressions" {
             },
         },
         // Chained binary
-        .{ .source = "5 + 10 * 5 / 20", .expected = &[_]TestInstruction{
-            .{ .chunk = .{ .OpCode = .Constant } },
-            .{ .chunk = .{ .Constant = 0 }, .constant = 5 },
-            .{ .chunk = .{ .OpCode = .Constant } },
-            .{ .chunk = .{ .Constant = 1 }, .constant = 10 },
-            .{ .chunk = .{ .OpCode = .Constant } },
-            .{ .chunk = .{ .Constant = 2 }, .constant = 5 },
-            .{ .chunk = .{ .OpCode = .Multiply } },
-            .{ .chunk = .{ .OpCode = .Constant } },
-            .{ .chunk = .{ .Constant = 3 }, .constant = 20 },
-            .{ .chunk = .{ .OpCode = .Divide } },
-            .{ .chunk = .{ .OpCode = .Add } },
-            .{ .chunk = .{ .OpCode = .Return } },
-        } },
+        .{
+            .source = "5 + 10 * 15 / 20",
+            .expected = &[_]TestInstruction{
+                .{ .chunk = .{ .OpCode = .Constant } },
+                .{ .chunk = .{ .Constant = 0 }, .constant = 5 },
+                .{ .chunk = .{ .OpCode = .Constant } },
+                .{ .chunk = .{ .Constant = 1 }, .constant = 10 },
+                .{ .chunk = .{ .OpCode = .Constant } },
+                .{ .chunk = .{ .Constant = 2 }, .constant = 15 },
+                .{ .chunk = .{ .OpCode = .Multiply } },
+                .{ .chunk = .{ .OpCode = .Constant } },
+                .{ .chunk = .{ .Constant = 3 }, .constant = 20 },
+                .{ .chunk = .{ .OpCode = .Divide } },
+                .{ .chunk = .{ .OpCode = .Add } },
+                .{ .chunk = .{ .OpCode = .Return } },
+            },
+        },
+        // equality
+        .{
+            .source = "10 == 10",
+            .expected = &[_]TestInstruction{
+                .{ .chunk = .{ .OpCode = .Constant } },
+                .{ .chunk = .{ .Constant = 0 }, .constant = 10 },
+                .{ .chunk = .{ .OpCode = .Constant } },
+                .{ .chunk = .{ .Constant = 1 }, .constant = 10 },
+                .{ .chunk = .{ .OpCode = .Equal } },
+                .{ .chunk = .{ .OpCode = .Return } },
+            },
+        },
     };
 
     for (test_cases) |case| {

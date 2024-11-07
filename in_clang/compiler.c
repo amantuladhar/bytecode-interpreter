@@ -174,6 +174,7 @@ static void unary() {
         default: return;
     }
 }
+
 static void parsePrecedence(Precedence precedence) {
     advance();
     ParseFn prefixRule = getRule(parser.previous.type)->prefix;
