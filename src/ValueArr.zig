@@ -1,7 +1,11 @@
 const std = @import("std");
 const Allocator = std.mem.Allocator;
 
-pub const Value = f64;
+pub const Value = union(enum) {
+    Number: f64,
+    Bool: bool,
+    Nil,
+};
 
 const Self = @This();
 
@@ -36,5 +40,27 @@ pub fn write(self: *Self, value: Value) !void {
 }
 
 pub fn printValue(value: Value) void {
-    std.debug.print("{d}", .{value});
+    switch (value) {
+        .Number => std.debug.print("{d}", .{value.Number}),
+        .Nil => std.debug.print("nil", .{}),
+        .Bool => std.debug.print("{}", .{value.Bool}),
+    }
+}
+
+pub fn equalValue(v1: Value, v2: Value) bool {
+    if (@as(std.meta.Tag(Value), v1) != @as(std.meta.Tag(Value), v2)) {
+        return false;
+    }
+    return switch (v1) {
+        .Number => v1.Number == v2.Number,
+        .Nil => true,
+        .Bool => v1.Bool == v2.Bool,
+    };
+}
+pub fn isFalsy(v: Value) bool {
+    return switch (v) {
+        .Number => v.Number == 0,
+        .Nil => true,
+        .Bool => v.Bool == false,
+    };
 }

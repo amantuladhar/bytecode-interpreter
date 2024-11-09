@@ -1,11 +1,12 @@
 const std = @import("std");
 const Scanner = @import("Scanner.zig");
 const Chunk = @import("chunk.zig");
-const ChunkValue = Chunk.ChunkValue;
 const Token = @import("Token.zig");
+const ValueArr = @import("ValueArr.zig");
+const Value = ValueArr.Value;
+const ChunkValue = Chunk.ChunkValue;
 const TokenType = Token.TokenType;
 const OpCode = Chunk.OpCode;
-const Value = @import("ValueArr.zig").Value;
 
 const Self = @This();
 
@@ -93,41 +94,36 @@ const RULES: [precedence_fields.len]ParseRule = blk: {
         const token_type: TokenType = @enumFromInt(token.value);
         rules[token.value] = switch (token_type) {
             .LeftParen => .{ .prefix = grouping },
+            .Minus => .{ .prefix = unary, .infix = binary, .precedence = .Term },
+            .Plus => .{ .infix = binary, .precedence = .Term },
+            .Slash, .Star => .{ .infix = binary, .precedence = .Factor },
+            .Bang => .{ .prefix = unary },
+            .BangEqual, .EqualEqual => .{ .infix = binary, .precedence = .Equality },
+            .Greater, .GreaterEqual => .{ .infix = binary, .precedence = .Comparision },
+            .Number => .{ .prefix = number },
+            .False, .True, .Nil => .{ .prefix = literal },
             .RightParen => .{},
             .LeftBrace => .{},
             .RightBrace => .{},
             .Comma => .{},
             .Dot => .{},
-            .Minus => .{ .prefix = unary, .infix = binary, .precedence = .Term },
-            .Plus => .{ .infix = binary, .precedence = .Term },
             .Semicolon => .{},
-            .Slash => .{ .infix = binary, .precedence = .Factor },
-            .Star => .{ .infix = binary, .precedence = .Factor },
-            .Bang => .{},
-            .BangEqual => .{},
             .Equal => .{},
-            .EqualEqual => .{ .infix = binary, .precedence = .Equality },
-            .Greater => .{},
-            .GreaterEqual => .{},
             .Less => .{},
             .LessEqual => .{},
             .Ident => .{},
             .String => .{},
-            .Number => .{ .prefix = number },
             .And => .{},
             .Class => .{},
             .Else => .{},
-            .False => .{},
             .For => .{},
             .Fun => .{},
             .If => .{},
-            .Nil => .{},
             .Or => .{},
             .Print => .{},
             .Super => .{},
             .Return => .{},
             .This => .{},
-            .True => .{},
             .Var => .{},
             .While => .{},
             .Error => .{},
@@ -175,7 +171,16 @@ fn binary(s: *Self) void {
 
 fn number(s: *Self) void {
     const n = std.fmt.parseFloat(f32, s.parser.previous.?.text) catch unreachable;
-    s.emitConstant(n);
+    s.emitConstant(.{ .Number = n });
+}
+
+fn literal(s: *Self) void {
+    switch (s.parser.previous.?.type) {
+        .False => s.emitByte(.{ .OpCode = .False }),
+        .True => s.emitByte(.{ .OpCode = .True }),
+        .Nil => s.emitByte(.{ .OpCode = .Nil }),
+        else => unreachable,
+    }
 }
 
 fn emitConstant(s: *Self, v: Value) void {
@@ -311,6 +316,45 @@ test "compile expressions" {
                 .{ .chunk = .{ .OpCode = .Return } },
             },
         },
+        // boolean
+        .{
+            .source = "true",
+            .expected = &[_]TestInstruction{
+                .{ .chunk = .{ .OpCode = .True } },
+                .{ .chunk = .{ .OpCode = .Return } },
+            },
+        },
+        // long comparision
+        .{
+            .source = "!(5 - 4 > 3 * 2 == !nil)",
+            .expected = &[_]TestInstruction{
+                .{ .chunk = .{ .OpCode = .Constant } },
+                .{ .chunk = .{ .Constant = 0 }, .constant = 5 },
+                .{ .chunk = .{ .OpCode = .Constant } },
+                .{ .chunk = .{ .Constant = 1 }, .constant = 4 },
+                .{ .chunk = .{ .OpCode = .Subtract } },
+                .{ .chunk = .{ .OpCode = .Constant } },
+                .{ .chunk = .{ .Constant = 2 }, .constant = 3 },
+                .{ .chunk = .{ .OpCode = .Constant } },
+                .{ .chunk = .{ .Constant = 3 }, .constant = 2 },
+                .{ .chunk = .{ .OpCode = .Multiply } },
+                .{ .chunk = .{ .OpCode = .Greater } },
+                .{ .chunk = .{ .OpCode = .Nil } },
+                .{ .chunk = .{ .OpCode = .Not } },
+                .{ .chunk = .{ .OpCode = .Equal } },
+                .{ .chunk = .{ .OpCode = .Not } },
+                .{ .chunk = .{ .OpCode = .Return } },
+            },
+        },
+        .{
+            .source = "false == true",
+            .expected = &[_]TestInstruction{
+                .{ .chunk = .{ .OpCode = .False } },
+                .{ .chunk = .{ .OpCode = .True } },
+                .{ .chunk = .{ .OpCode = .Equal } },
+                .{ .chunk = .{ .OpCode = .Return } },
+            },
+        },
     };
 
     for (test_cases) |case| {
@@ -323,6 +367,10 @@ test "compile expressions" {
         var compiler = try init(allocator, source, &chunk);
         defer compiler.deinit();
         compiler.compile();
+
+        // for (chunk.code[0..chunk.len]) |c| {
+        //     std.debug.print("{any}\n", .{c});
+        // }
 
         try std.testing.expectEqual(expected.len, chunk.len);
         for (expected, chunk.code[0..chunk.len]) |exp, actual| {

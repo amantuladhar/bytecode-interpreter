@@ -1,10 +1,10 @@
 const std = @import("std");
-const Allocator = std.mem.Allocator;
 const debug = @import("debug.zig");
 const VM = @import("vm.zig");
 const Chunk = @import("chunk.zig");
-const OpCode = Chunk.OpCode;
 const Compiler = @import("Compiler.zig");
+const Allocator = std.mem.Allocator;
+const OpCode = Chunk.OpCode;
 
 pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
@@ -28,12 +28,14 @@ fn repl(allocator: Allocator) !void {
     const read_count = try std.io.getStdIn().read(&line);
     try sout.print("{s}", .{line[0..read_count]});
 
-    const source = "5";
-
     var chunk = try Chunk.init(allocator);
     defer chunk.deinit();
 
-    var compiler = try Compiler.init(allocator, source, &chunk);
+    var compiler = try Compiler.init(allocator, line[0..read_count], &chunk);
     defer compiler.deinit();
     compiler.compile();
+
+    var vm = VM.init(&chunk);
+    defer vm.deinit();
+    _ = vm.interpret();
 }

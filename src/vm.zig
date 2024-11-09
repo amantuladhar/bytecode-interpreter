@@ -1,7 +1,10 @@
 const std = @import("std");
-const Chunk = @import("Chunk.zig");
-const Value = @import("ValueArr.zig").Value;
-const printValue = @import("ValueArr.zig").printValue;
+const Chunk = @import("chunk.zig");
+const ValueArr = @import("ValueArr.zig");
+const Value = ValueArr.Value;
+const printValue = ValueArr.printValue;
+const equalValue = ValueArr.equalValue;
+const isFalsy = ValueArr.isFalsy;
 
 const MAX_STACK_SIZE = 256;
 
@@ -41,8 +44,8 @@ pub fn interpret(self: *Self) InterpretResult {
                 self.push(constant);
             },
             .Add, .Subtract, .Multiply, .Divide => {
-                const b = self.pop();
-                const a = self.pop();
+                const b = self.pop().Number;
+                const a = self.pop().Number;
                 const result = switch (inst.OpCode) {
                     .Add => a + b,
                     .Subtract => a - b,
@@ -51,16 +54,30 @@ pub fn interpret(self: *Self) InterpretResult {
                     // unreachable so random value to return float
                     else => 0.0,
                 };
-                self.push(result);
+                self.push(.{ .Number = result });
             },
             .Negate => {
-                self.push(-self.pop());
+                self.push(.{ .Number = -(self.pop().Number) });
             },
             .Return => {
                 printValue(self.pop());
                 std.debug.print("\n", .{});
                 return .Ok;
             },
+            .Nil => {
+                self.push(.Nil);
+            },
+            .True => self.push(.{ .Bool = true }),
+            .False => self.push(.{ .Bool = false }),
+            .Equal => {
+                const b = self.pop();
+                const a = self.pop();
+                self.push(.{ .Bool = equalValue(a, b) });
+            },
+            .Not => {
+                self.push(.{ .Bool = isFalsy(self.pop()) });
+            },
+            .Greater, .Less => {},
         }
     }
 }
