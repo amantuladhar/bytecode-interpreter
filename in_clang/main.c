@@ -7,17 +7,17 @@
 #include "vm.h"
 
 static void repl() {
-    // char line[1024];
-    // for (;;) {
-    //     printf("> ");
-    //     if (!fgets(line, sizeof(line), stdin)) {
-    //         printf("\n");
-    //         break;
-    //     }
-    // }
-    printf("\n ==== Interpret Start === \n");
+    char line[1024];
+    for (;;) {
+        printf("> ");
+        if (!fgets(line, sizeof(line), stdin)) {
+            printf("\n");
+            break;
+        }
+    }
+    // printf("\n ==== Interpret Start === \n");
     // interpret("!(5 - 4 > 3 * 2 == !nil)");
-    interpret("5 + 10 * 15");
+    interpret(line);
 }
 
 static char* readFile(const char* path) {

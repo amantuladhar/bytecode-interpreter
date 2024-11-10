@@ -7,8 +7,13 @@ set(CMAKE_BUILD_TYPE Debug)
 add_compile_options(-Wall)
 
 add_executable(clox main.c
-    common.h debug.h debug.c chunk.h chunk.c memory.h memory.c
-    value.c value.h vm.h vm.c
+    chunk.h chunk.c
+    common.h
     compiler.h compiler.c
+    debug.h debug.c
+    memory.h memory.c
+    object.h object.c
     scanner.h scanner.c
+    value.c value.h
+    vm.h vm.c
 )
