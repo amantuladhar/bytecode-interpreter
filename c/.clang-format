@@ -1,0 +1,20 @@
+BasedOnStyle: LLVM
+IndentWidth: 4
+PointerAlignment: Left
+UseTab: Never
+TabWidth: 4
+ContinuationIndentWidth: 4
+AlignTrailingComments: true
+AllowShortBlocksOnASingleLine: Always
+AllowShortCaseLabelsOnASingleLine: true
+AllowShortFunctionsOnASingleLine: Inline
+AllowShortIfStatementsOnASingleLine: true
+AllowShortLoopsOnASingleLine: true
+BreakBeforeBraces: Attach
+SpaceBeforeParens: ControlStatements
+ColumnLimit: 120 # Adjust as necessary
+SortIncludes: CaseInsensitive
+IncludeBlocks: Preserve
+SpacesInParentheses: false
+IndentCaseLabels: true
+AlignEscapedNewlines: Left
