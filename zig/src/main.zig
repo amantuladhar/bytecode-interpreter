@@ -17,9 +17,9 @@ pub fn main() !void {
     var c = try Chunk.init(allocator);
     defer c.deinit();
 
-    try c.writeConstant(.{ .Number = 1.2 });
-    try c.writeConstant(.{ .Number = 42.42 });
-    try c.writeOpCode(.Return);
+    try c.writeConstant(.{ .Number = 1.2 }, 123);
+    try c.writeConstant(.{ .Number = 42.42 }, 123);
+    try c.writeOpCode(.Return, 123);
 
     debug.disasssembleChunk(c, "Test chunk");
 }

@@ -12,14 +12,14 @@ int main(int argc, char** argv) {
     Chunk_init(&chunk);
 
     int constant = Chunk_addConstant(&chunk, 1.2);
-    Chunk_write(&chunk, OP_CONSTANT);
-    Chunk_write(&chunk, constant);
+    Chunk_write(&chunk, OP_CONSTANT, 123);
+    Chunk_write(&chunk, constant, 123);
 
     constant = Chunk_addConstant(&chunk, 2.9);
-    Chunk_write(&chunk, OP_CONSTANT);
-    Chunk_write(&chunk, constant);
+    Chunk_write(&chunk, OP_CONSTANT, 123);
+    Chunk_write(&chunk, constant, 123);
 
-    Chunk_write(&chunk, OP_RETURN);
+    Chunk_write(&chunk, OP_RETURN, 123);
     disassembleChunk(&chunk, "test chunk");
     Chunk_free(&chunk);
 
