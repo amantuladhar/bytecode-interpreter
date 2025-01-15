@@ -5,7 +5,7 @@ const ValueArr = @import("ValueArr.zig");
 const Value = ValueArr.Value;
 const Allocator = std.mem.Allocator;
 
-const Instruction = union(enum) {
+pub const Instruction = union(enum) {
     OpCode: OpCode,
     /// holds offset to find constant value from constants array
     Constant: usize,
@@ -77,7 +77,7 @@ test "chunk test" {
     try chunk.writeConstant(.{ .Number = 1.1 }, 123);
     try chunk.writeConstant(.{ .Number = 2.2 }, 123);
 
-    try testing.expectEqual(0, chunk.len);
+    try testing.expectEqual(5, chunk.len);
     try testing.expectEqual(8, chunk.capacity);
     try testing.expectEqual(8, chunk.instructions.len);
 }

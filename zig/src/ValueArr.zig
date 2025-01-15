@@ -34,3 +34,9 @@ pub fn write(self: *Self, value: Value) !void {
     self.values[self.len] = value;
     self.len += 1;
 }
+
+pub fn printValue(value: Value) void {
+    switch (value) {
+        .Number => std.debug.print("{d}", .{value.Number}),
+    }
+}

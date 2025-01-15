@@ -1,6 +1,7 @@
 const std = @import("std");
 const Chunk = @import("Chunk.zig");
 const Value = @import("ValueArr.zig").Value;
+const printValue = @import("ValueArr.zig").printValue;
 const print = std.debug.print;
 
 pub fn disasssembleChunk(chunk: Chunk, name: []const u8) void {
@@ -27,6 +28,7 @@ pub fn disassembleInstruction(chunk: Chunk, offset: usize) usize {
 
     return switch (instruction.OpCode) {
         .Constant => return constantInstruction("OP_CONSTANT", chunk, offset),
+        .Negate => return simpleInstruction("OP_NEGATE", offset),
         .Return => return simpleInstruction("OP_RETURN", offset),
     };
 }
@@ -46,10 +48,4 @@ fn constantInstruction(name: []const u8, chunk: Chunk, offset: usize) usize {
 fn simpleInstruction(name: []const u8, offset: usize) usize {
     print("{s}\n", .{name});
     return offset + 1;
-}
-
-fn printValue(value: Value) void {
-    switch (value) {
-        .Number => print("{d}", .{value.Number}),
-    }
 }

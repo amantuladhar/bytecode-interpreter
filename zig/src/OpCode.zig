@@ -1,1 +1,5 @@
-pub const OpCode = enum { Constant, Return };
+pub const OpCode = enum {
+    Constant,
+    Negate,
+    Return,
+};

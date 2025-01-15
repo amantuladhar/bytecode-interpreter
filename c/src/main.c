@@ -3,10 +3,13 @@
 #include "chunk.h"
 #include "common.h"
 #include "debug.h"
+#include "vm.h"
 
 int main(int argc, char** argv) {
     (void)argc;
     (void)argv[0];
+
+    VM_init();
 
     Chunk chunk;
     Chunk_init(&chunk);
@@ -19,8 +22,18 @@ int main(int argc, char** argv) {
     Chunk_write(&chunk, OP_CONSTANT, 123);
     Chunk_write(&chunk, constant, 123);
 
+    Chunk_write(&chunk, OP_NEGATE, 123);
+
     Chunk_write(&chunk, OP_RETURN, 123);
+    printf("\n\n======== Disassemble Chunk =============\n\n");
     disassembleChunk(&chunk, "test chunk");
+    printf("\n==========================================\n");
+
+    printf("\n\n======== Interpret =============\n\n");
+    VM_interpret(&chunk);
+    printf("\n==================================\n");
+
+    VM_free();
     Chunk_free(&chunk);
 
     return 0;
