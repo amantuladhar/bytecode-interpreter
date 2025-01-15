@@ -38,16 +38,17 @@ static InterpretResult run() {
 #define READ_CONSTANT() (vm.chunk->constants.values[READ_BYTE()])
 
     for (;;) {
-
-#ifndef DEBUG_TRACE_EXECUTION
+        // This is for more or less stacktrace
+        /*#ifndef DEBUG_TRACE_EXECUTION*/
         printf("        ");
         for (Value* slot = vm.stack; slot < vm.stack_top; slot++) {
             printf("[");
             printValue(*slot);
             printf("]");
         }
-        printf("\n") disassembleInstruction(vm.chunk, (int)(vm.ip - vm.chunk->code));
-#endif
+        printf("\n");
+        disassembleInstruction(vm.chunk, (int)(vm.ip - vm.chunk->code));
+        /*#endif*/
 
         uint8_t instruction;
         switch (instruction = READ_BYTE()) {

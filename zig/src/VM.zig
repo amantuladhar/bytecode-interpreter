@@ -3,6 +3,7 @@ const Chunk = @import("Chunk.zig");
 const Instruction = @import("Chunk.zig").Instruction;
 const Value = @import("ValueArr.zig").Value;
 const printValue = @import("ValueArr.zig").printValue;
+const disassembleInstruction = @import("debug.zig").disassembleInstruction;
 
 const Allocator = std.mem.Allocator;
 
@@ -46,6 +47,18 @@ fn run(self: *Self) VMError!void {
     std.debug.assert(self.chunk != null);
 
     while (true) {
+        const show_stacktrace = true;
+        if (show_stacktrace) {
+            std.debug.print("        ", .{});
+            for (self.stack[0..self.stack_top]) |slot| {
+                std.debug.print("[", .{});
+                printValue(slot);
+                std.debug.print("]", .{});
+            }
+            std.debug.print("\n", .{});
+            _ = disassembleInstruction(self.chunk.?.*, self.ip_index);
+        }
+
         const instruction = self.readBytes();
         if (instruction != .OpCode) {
             @panic("This must be OpCode instruction");
