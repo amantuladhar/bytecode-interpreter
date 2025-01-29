@@ -28,6 +28,10 @@ pub fn disassembleInstruction(chunk: Chunk, offset: usize) usize {
 
     return switch (instruction.OpCode) {
         .Constant => return constantInstruction("OP_CONSTANT", chunk, offset),
+        .Add => return simpleInstruction("OP_ADD", offset),
+        .Subtract => return simpleInstruction("OP_Subtract", offset),
+        .Multiply => return simpleInstruction("OP_MULTIPLY", offset),
+        .Divide => return simpleInstruction("OP_DIVIDE", offset),
         .Negate => return simpleInstruction("OP_NEGATE", offset),
         .Return => return simpleInstruction("OP_RETURN", offset),
     };

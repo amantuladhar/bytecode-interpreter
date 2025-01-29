@@ -21,13 +21,17 @@ pub fn main() !void {
     var c = try Chunk.init(allocator);
     defer c.deinit();
 
-    try c.writeConstant(.{ .Number = 1.2 }, 123);
+    try c.writeConstant(.{ .Number = 10.2 }, 123);
+    try c.writeConstant(.{ .Number = 9.8 }, 123);
+    try c.writeOpCode(.Add, 123);
+    try c.writeConstant(.{ .Number = 5 }, 123);
+    try c.writeOpCode(.Divide, 123);
     try c.writeOpCode(.Negate, 123);
     try c.writeOpCode(.Return, 123);
 
     std.debug.print("\n========== Disassemble =======\n", .{});
     debug.disasssembleChunk(c, "Test chunk");
 
-    std.debug.print("\n========== Interpret =======\n", .{});
+    std.debug.print("========== Interpret =======\n", .{});
     try vm.interpret(&c);
 }

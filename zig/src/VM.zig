@@ -68,6 +68,25 @@ fn run(self: *Self) VMError!void {
                 const c = self.readConstant();
                 self.push(c);
             },
+            .Add, .Subtract, .Multiply, .Divide => {
+                const bv = self.pop();
+                const av = self.pop();
+                if (av != .Number or bv != .Number) {
+                    std.debug.print("Either a or b is not number: a {any}, b {any}", .{ av, bv });
+                    return VMError.Runtime;
+                }
+                const a = av.Number;
+                const b = bv.Number;
+                self.push(.{
+                    .Number = switch (instruction.OpCode) {
+                        .Add => a + b,
+                        .Subtract => a - b,
+                        .Multiply => a - b,
+                        .Divide => a / b,
+                        else => unreachable,
+                    },
+                });
+            },
             .Negate => {
                 const v = self.pop();
                 if (v != .Number) {
@@ -94,7 +113,7 @@ pub fn pop(self: *Self) Value {
     return self.stack[self.stack_top];
 }
 
-fn readConstant(self: *Self) Value {
+inline fn readConstant(self: *Self) Value {
     const constant = self.readBytes();
     if (constant != .Constant) {
         @panic("Instruction after .Constant should be index to find constant");
@@ -102,7 +121,7 @@ fn readConstant(self: *Self) Value {
     return self.chunk.?.constants.values[constant.Constant];
 }
 
-fn readBytes(self: *Self) Instruction {
+inline fn readBytes(self: *Self) Instruction {
     const idx = self.ip_index;
     self.ip_index += 1;
     return self.chunk.?.instructions[idx];
