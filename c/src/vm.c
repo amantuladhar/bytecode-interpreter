@@ -27,10 +27,9 @@ Value VM_pop() {
     return *vm.stack_top;
 }
 
-InterpretResult VM_interpret(Chunk* chunk) {
-    vm.chunk = chunk;
-    vm.ip = vm.chunk->code;
-    return run();
+InterpretResult VM_interpret(const char* source) {
+    compile(source);
+    return INTERPRET_OK;
 }
 
 static InterpretResult run() {

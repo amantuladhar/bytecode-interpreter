@@ -89,7 +89,6 @@ static InterpretResult run() {
     } while (false)
 
     for (;;) {
-
 #ifdef DEBUG_TRACE_EXECUTION
         printf("%-8s", "");
         for (Value* slot = vm.stack; slot < vm.stackTop; slot++) {

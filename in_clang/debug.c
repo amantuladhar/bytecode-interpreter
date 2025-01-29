@@ -21,13 +21,15 @@ static int constantInstruction(const char* name, Chunk* chunk, int offset) {
 void disassembleChunk(Chunk* chunk, const char* name) {
     printf("== %s ==\n", name);
 
-    for (int offset = 0; offset < chunk->count;) { offset = disassembleInstruction(chunk, offset); }
+    for (int offset = 0; offset < chunk->count;) {
+        offset = disassembleInstruction(chunk, offset);
+    }
 }
 
 int disassembleInstruction(Chunk* chunk, int offset) {
     printf("%04d ", offset);
 
-    bool is_same_line = chunk->lines[offset] == chunk->lines[offset - 1];
+    bool is_same_line = offset <= 0 || chunk->lines[offset] == chunk->lines[offset - 1];
 
     if (offset > 0 && is_same_line) {
         printf("    | ");

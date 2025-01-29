@@ -7,9 +7,9 @@ ContinuationIndentWidth: 4
 AlignTrailingComments: true
 AllowShortBlocksOnASingleLine: Always
 AllowShortCaseLabelsOnASingleLine: true
-AllowShortFunctionsOnASingleLine: Inline
-AllowShortIfStatementsOnASingleLine: true
-AllowShortLoopsOnASingleLine: true
+# AllowShortFunctionsOnASingleLine: AlignEscapedNewlines
+AllowShortIfStatementsOnASingleLine: false
+AllowShortLoopsOnASingleLine: false
 BreakBeforeBraces: Attach
 SpaceBeforeParens: ControlStatements
 ColumnLimit: 120 # Adjust as necessary

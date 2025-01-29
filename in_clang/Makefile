@@ -1,5 +1,5 @@
 CMAKE=CMAKE
-BUILD_DIR=./build-debug
+BUILD_DIR=./build
 ARGS=
 
 run: build

@@ -1,0 +1,15 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "type": "lldb",
+        "request": "launch",
+        "name": "Custom Debug",
+        "program": "${workspaceFolder}/build/clox",
+        "preLaunchTask": "make build",
+        "args": [],
+        "cwd": "${workspaceFolder}",
+        "console": "integratedTerminal"
+      },
+    ] 
+}
