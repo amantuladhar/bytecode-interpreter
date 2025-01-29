@@ -18,9 +18,17 @@ int main(int argc, char** argv) {
     Chunk_write(&chunk, OP_CONSTANT, 123);
     Chunk_write(&chunk, constant, 123);
 
-    constant = Chunk_addConstant(&chunk, 2.9);
+    constant = Chunk_addConstant(&chunk, 2.8);
     Chunk_write(&chunk, OP_CONSTANT, 123);
     Chunk_write(&chunk, constant, 123);
+
+    Chunk_write(&chunk, OP_ADD, 123);
+
+    constant = Chunk_addConstant(&chunk, 2);
+    Chunk_write(&chunk, OP_CONSTANT, 123);
+    Chunk_write(&chunk, constant, 123);
+
+    Chunk_write(&chunk, OP_DIVIDE, 123);
 
     Chunk_write(&chunk, OP_NEGATE, 123);
 

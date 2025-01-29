@@ -36,6 +36,12 @@ InterpretResult VM_interpret(Chunk* chunk) {
 static InterpretResult run() {
 #define READ_BYTE() (*vm.ip++)
 #define READ_CONSTANT() (vm.chunk->constants.values[READ_BYTE()])
+#define BINARY_OP(op)     \
+    do {                  \
+        double b = VM_pop(); \
+        double a = VM_pop(); \
+        VM_push(a op b);     \
+    } while (false)
 
     for (;;) {
         // This is for more or less stacktrace
@@ -57,6 +63,10 @@ static InterpretResult run() {
                 VM_push(constant);
                 break;
             }
+            case OP_ADD: BINARY_OP(+); break;
+            case OP_SUBTRACT: BINARY_OP(-); break;
+            case OP_MULTIPLY: BINARY_OP(*); break;
+            case OP_DIVIDE: BINARY_OP(/); break;
             case OP_NEGATE: VM_push(-VM_pop()); break;
             case OP_RETURN: {
                 printValue(VM_pop());
@@ -68,6 +78,7 @@ static InterpretResult run() {
 
 #undef READ_BYTE
 #undef READ_CONSTANT
+#undef BINARY_OP
 }
 
 static void resetStack() {
