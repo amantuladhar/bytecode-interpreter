@@ -45,12 +45,11 @@ Chunk* compilingChunk;
 static ParseRule* getRule(TokenType type);
 static void parsePrecedence(Precedence precedence);
 
-static Chunk* currentChunk() {
-    return compilingChunk;
-}
+static Chunk* currentChunk() { return compilingChunk; }
 
 static void errorAt(const Token* token, const char* message) {
-    if (parser.panicMode) return;
+    if (parser.panicMode)
+        return;
     parser.panicMode = true;
     fprintf(stderr, "[line %d] Error", token->line);
     if (token->type == TOKEN_EOF) {
@@ -64,20 +63,17 @@ static void errorAt(const Token* token, const char* message) {
     parser.hadError = true;
 }
 
-static void error(const char* message) {
-    errorAt(&parser.previous, message);
-}
+static void error(const char* message) { errorAt(&parser.previous, message); }
 
-static void errorAtCurrent(const char* message) {
-    errorAt(&parser.current, message);
-}
+static void errorAtCurrent(const char* message) { errorAt(&parser.current, message); }
 
 static void advance() {
     parser.previous = parser.current;
 
     for (;;) {
         parser.current = Scanner_scanToken();
-        if (parser.current.type != TOKEN_ERROR) break;
+        if (parser.current.type != TOKEN_ERROR)
+            break;
         errorAtCurrent(parser.current.start);
     }
 }
@@ -90,18 +86,14 @@ static void consume(TokenType type, const char* message) {
     errorAtCurrent(message);
 }
 
-static void emitByte(uint8_t byte) {
-    Chunk_write(currentChunk(), byte, parser.previous.line);
-}
+static void emitByte(uint8_t byte) { Chunk_write(currentChunk(), byte, parser.previous.line); }
 
 static void emitBytes(uint8_t byte1, uint8_t byte2) {
     emitByte(byte1);
     emitByte(byte2);
 }
 
-static void emitReturn() {
-    emitByte(OP_RETURN);
-}
+static void emitReturn() { emitByte(OP_RETURN); }
 
 static uint8_t makeConstant(Value value) {
     int constant = Chunk_addConstant(currentChunk(), value);
@@ -112,14 +104,15 @@ static uint8_t makeConstant(Value value) {
     return (uint8_t)constant;
 }
 
-static void emitConstant(Value value) {
-    emitBytes(OP_CONSTANT, makeConstant(value));
-}
+static void emitConstant(Value value) { emitBytes(OP_CONSTANT, makeConstant(value)); }
 
 static void endCompiler() {
     emitReturn();
 #ifndef DEBUG_PRINT_CODE
-    if (!parser.hadError) { disassembleChunk(currentChunk(), "code"); }
+    if (!parser.hadError) {
+        printf("\n ====== Code ==== ]\n");
+        disassembleChunk(currentChunk(), "code");
+    }
 #endif
 }
 
@@ -151,9 +144,7 @@ static void literal() {
     }
 }
 
-static void expression() {
-    parsePrecedence(PREC_ASSIGNMENT);
-}
+static void expression() { parsePrecedence(PREC_ASSIGNMENT); }
 
 static void grouping() {
     expression();
@@ -165,9 +156,7 @@ static void number() {
     emitConstant(NUMBER_VAL(value));
 }
 
-static void string() {
-    emitConstant(OBJ_VAL(copyString(parser.previous.start + 1, parser.previous.length - 2)));
-}
+static void string() { emitConstant(OBJ_VAL(copyString(parser.previous.start + 1, parser.previous.length - 2))); }
 
 static void unary() {
     TokenType operatorType = parser.previous.type;
@@ -237,9 +226,7 @@ ParseRule rules[] = {
     [TOKEN_EOF] = {NULL, NULL, PREC_NONE},
 };
 
-static ParseRule* getRule(const TokenType type) {
-    return &rules[type];
-}
+static ParseRule* getRule(const TokenType type) { return &rules[type]; }
 
 bool Compiler_compile(const char* source, Chunk* chunk) {
     Scanner_init(source);

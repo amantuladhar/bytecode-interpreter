@@ -1,9 +1,12 @@
 const std = @import("std");
+const Obj = @import("object.zig").Obj;
+const ObjectValue = @import("object.zig").ObjValue;
 const Allocator = std.mem.Allocator;
 
 pub const Value = union(enum) {
     Number: f64,
     Bool: bool,
+    Obj: *Obj,
     Nil,
 };
 
@@ -44,6 +47,9 @@ pub fn printValue(value: Value) void {
         .Number => std.debug.print("{d}", .{value.Number}),
         .Nil => std.debug.print("nil", .{}),
         .Bool => std.debug.print("{}", .{value.Bool}),
+        .Obj => switch (value.Obj.value) {
+            .String => std.debug.print("{s}", .{value.Obj.value.String.value}),
+        },
     }
 }
 
@@ -55,6 +61,14 @@ pub fn equalValue(v1: Value, v2: Value) bool {
         .Number => v1.Number == v2.Number,
         .Nil => true,
         .Bool => v1.Bool == v2.Bool,
+        .Obj => {
+            if (@as(std.meta.Tag(ObjectValue), v1.Obj.value) != @as(std.meta.Tag(ObjectValue), v2.Obj.value)) {
+                return false;
+            }
+            return switch (v1.Obj.value) {
+                .String => std.mem.eql(u8, v1.Obj.value.String.value, v2.Obj.value.String.value),
+            };
+        },
     };
 }
 pub fn isFalsy(v: Value) bool {
@@ -62,5 +76,6 @@ pub fn isFalsy(v: Value) bool {
         .Number => v.Number == 0,
         .Nil => true,
         .Bool => v.Bool == false,
+        else =>false,
     };
 }

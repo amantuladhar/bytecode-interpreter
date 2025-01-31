@@ -8,15 +8,15 @@
 
 static void repl() {
     char line[1024];
-    // for (;;) {
-    //     printf("> ");
-    //     if (fgets(line, sizeof(line), stdin) != NULL) {
-    //         printf("\n");
-    //         break;
-    //     }
-    // }
+    for (;;) {
+        printf("> ");
+        if (fgets(line, sizeof(line), stdin) != NULL) {
+            printf("\n");
+            break;
+        }
+    }
     printf("\n ==== Interpret Start === \n");
-    interpret("!(5 - 4 > 3 * 2 == !nil)");
+    // interpret("!(5 - 4 > 3 * 2 == !nil)");
     interpret(line);
 }
 

@@ -28,6 +28,13 @@ pub fn disassembleInstruction(chunk: *const Chunk, offset: usize) usize {
                 .Subtract => return simpleInstruction("Subtract", offset),
                 .Multiply => return simpleInstruction("Multiply", offset),
                 .Divide => return simpleInstruction("Divide", offset),
+                .Nil => return simpleInstruction("Nil", offset),
+                .True => return simpleInstruction("True", offset),
+                .False => return simpleInstruction("False", offset),
+                .Not => return simpleInstruction("Not", offset),
+                .Equal => return simpleInstruction("Equal", offset),
+                .Greater => return simpleInstruction("Greater", offset),
+                .Less => return simpleInstruction("Less", offset),
                 .Constant => return complexInstruction("Constant", chunk, offset),
             }
         },

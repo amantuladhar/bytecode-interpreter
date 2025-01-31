@@ -8,15 +8,8 @@ const OpCode = Chunk.OpCode;
 
 pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
     const allocator = gpa.allocator();
-    defer {
-        if (gpa.deinit() == .leak) {
-            std.debug.panic("\n🛑🛑🛑 MEMORY LEAKED 🛑🛑🛑\n", .{});
-        }
-        std.debug.print("\n🟢🟢🟢 PROGRAM EXITED SUCCESSFULLY 🟢🟢🟢\n", .{});
-    }
-    const x = 10;
-    _ = x;
     try repl(allocator);
 }
 
@@ -31,11 +24,16 @@ fn repl(allocator: Allocator) !void {
     var chunk = try Chunk.init(allocator);
     defer chunk.deinit();
 
-    var compiler = try Compiler.init(allocator, line[0..read_count], &chunk);
+    var vm = VM.init(&chunk);
+    defer vm.deinit();
+
+    var compiler = try Compiler.init(allocator, &vm, line[0..read_count], &chunk);
     defer compiler.deinit();
     compiler.compile();
 
-    var vm = VM.init(&chunk);
-    defer vm.deinit();
-    _ = vm.interpret();
+    std.debug.print("\n ========= Interpret =========\n", .{});
+    _ = try vm.interpret(allocator, &vm);
+
+    std.debug.print("\n ========= Chunk =========\n", .{});
+    _ = debug.disassembleChunk(@ptrCast(&chunk), "repl");
 }

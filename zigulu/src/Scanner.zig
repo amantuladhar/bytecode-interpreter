@@ -313,6 +313,7 @@ test "advanced" {
         \\ while(true) {}
         \\ // test
         \\ fun(){}
+        \\ var str1 = "asfd";
     ;
 
     const TestData = std.meta.Tuple(&.{ usize, TokenType, []const u8 });
@@ -371,6 +372,12 @@ test "advanced" {
         .{ 11, .RightParen, ")" },
         .{ 11, .LeftBrace, "{" },
         .{ 11, .RightBrace, "}" },
+
+        .{ 12, .Var, "var" },
+        .{ 12, .Ident, "str1" },
+        .{ 12, .Equal, "=" },
+        .{ 12, .String, "\"asfd\"" },
+        .{ 12, .Semicolon, ";" },
     };
 
     var scanner = Self.init(source);

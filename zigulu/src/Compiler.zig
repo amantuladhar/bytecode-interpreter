@@ -3,6 +3,8 @@ const Scanner = @import("Scanner.zig");
 const Chunk = @import("chunk.zig");
 const Token = @import("Token.zig");
 const ValueArr = @import("ValueArr.zig");
+const object = @import("object.zig");
+const VM = @import("vm.zig");
 const Value = ValueArr.Value;
 const ChunkValue = Chunk.ChunkValue;
 const TokenType = Token.TokenType;
@@ -15,9 +17,11 @@ allocator: std.mem.Allocator,
 scanner: *Scanner,
 parser: Parser,
 chunk: *Chunk,
+vm: *VM,
 
 pub fn init(
     allocator: std.mem.Allocator,
+    vm: *VM,
     source: []const u8,
     chunk: *Chunk,
 ) !Self {
@@ -25,6 +29,7 @@ pub fn init(
     scanner.* = Scanner.init(source);
     return .{
         .allocator = allocator,
+        .vm = vm,
         .source = source,
         .scanner = scanner,
         .chunk = chunk,
@@ -102,6 +107,7 @@ const RULES: [precedence_fields.len]ParseRule = blk: {
             .Greater, .GreaterEqual => .{ .infix = binary, .precedence = .Comparision },
             .Number => .{ .prefix = number },
             .False, .True, .Nil => .{ .prefix = literal },
+            .String => .{ .prefix = string },
             .RightParen => .{},
             .LeftBrace => .{},
             .RightBrace => .{},
@@ -112,7 +118,6 @@ const RULES: [precedence_fields.len]ParseRule = blk: {
             .Less => .{},
             .LessEqual => .{},
             .Ident => .{},
-            .String => .{},
             .And => .{},
             .Class => .{},
             .Else => .{},
@@ -181,6 +186,13 @@ fn literal(s: *Self) void {
         .Nil => s.emitByte(.{ .OpCode = .Nil }),
         else => unreachable,
     }
+}
+
+fn string(s: *Self) void {
+    const str = object.copyString(s.allocator, s.parser.previous.?.text) catch unreachable;
+    const obj = object.Obj.init(s.allocator, s.vm, .{ .String = str }) catch unreachable;
+    const v: Value = .{ .Obj = obj };
+    s.emitConstant(v);
 }
 
 fn emitConstant(s: *Self, v: Value) void {

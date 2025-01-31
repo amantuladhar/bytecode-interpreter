@@ -44,7 +44,8 @@ static bool isFalsey(Value value) {
 }
 
 static void concatenate() {
-    ObjString* b = AS_STRING(pop());
+    Value x = pop();
+    ObjString* b = AS_STRING(x);
     ObjString* a = AS_STRING(pop());
 
     int length = a->length + b->length;
