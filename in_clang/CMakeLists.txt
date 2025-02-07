@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.29)
 project(clox C)
 
+file(GLOB_RECURSE SOURCE_FILES src/*.c src/*.h)
+
 set(CMAKE_C_STANDARD 17)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_BUILD_TYPE Debug)
@@ -13,15 +15,15 @@ set(CMAKE_BUILD_TYPE Debug)
 add_compile_options(-Wall -Wextra -Werror -fno-omit-frame-pointer -fsanitize=address)
 add_link_options(-fsanitize=address)
 
-
-add_executable(clox main.c
-        chunk.h chunk.c
-        common.h
-        compiler.h compiler.c
-        debug.h debug.c
-        memory.h memory.c
-        object.h object.c
-        scanner.h scanner.c
-        value.c value.h
-        vm.h vm.c
-)
+add_executable(clox ${SOURCE_FILES})
+# add_executable(clox main.c
+#         chunk.h chunk.c
+#         common.h
+#         compiler.h compiler.c
+#         debug.h debug.c
+#         memory.h memory.c
+#         object.h object.c
+#         scanner.h scanner.c
+#         value.c value.h
+#         vm.h vm.c
+# )

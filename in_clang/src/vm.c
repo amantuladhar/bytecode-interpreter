@@ -19,9 +19,12 @@ VM vm;
 void initVM() {
     resetStack();
     vm.objects = NULL;
+    Table_init(&vm.strings);
+
 }
 
 void freeVM() {
+    Table_free(&vm.strings);
     freeObjects();
 }
 
