@@ -189,7 +189,7 @@ fn literal(s: *Self) void {
 }
 
 fn string(s: *Self) void {
-    const str = object.copyString(s.allocator, s.parser.previous.?.text) catch unreachable;
+    const str = object.copyString(s.allocator, &s.vm.strings, s.parser.previous.?.text) catch unreachable;
     const obj = object.Obj.init(s.allocator, s.vm, .{ .String = str }) catch unreachable;
     const v: Value = .{ .Obj = obj };
     s.emitConstant(v);
@@ -282,7 +282,7 @@ test "compile expressions" {
             .source = "5",
             .expected = &[_]TestInstruction{
                 .{ .chunk = .{ .OpCode = .Constant } },
-                .{ .chunk = .{ .Constant = 0 }, .constant = 5 },
+                .{ .chunk = .{ .Constant = 0 }, .constant = .{ .Number = 5 } },
                 .{ .chunk = .{ .OpCode = .Return } },
             },
         },
@@ -291,9 +291,9 @@ test "compile expressions" {
             .source = "5 + 10",
             .expected = &[_]TestInstruction{
                 .{ .chunk = .{ .OpCode = .Constant } },
-                .{ .chunk = .{ .Constant = 0 }, .constant = 5 },
+                .{ .chunk = .{ .Constant = 0 }, .constant = .{ .Number = 5 } },
                 .{ .chunk = .{ .OpCode = .Constant } },
-                .{ .chunk = .{ .Constant = 1 }, .constant = 10 },
+                .{ .chunk = .{ .Constant = 1 }, .constant = .{ .Number = 10 } },
                 .{ .chunk = .{ .OpCode = .Add } },
                 .{ .chunk = .{ .OpCode = .Return } },
             },
@@ -303,14 +303,14 @@ test "compile expressions" {
             .source = "5 + 10 * 15 / 20",
             .expected = &[_]TestInstruction{
                 .{ .chunk = .{ .OpCode = .Constant } },
-                .{ .chunk = .{ .Constant = 0 }, .constant = 5 },
+                .{ .chunk = .{ .Constant = 0 }, .constant = .{ .Number = 5 } },
                 .{ .chunk = .{ .OpCode = .Constant } },
-                .{ .chunk = .{ .Constant = 1 }, .constant = 10 },
+                .{ .chunk = .{ .Constant = 1 }, .constant = .{ .Number = 10 } },
                 .{ .chunk = .{ .OpCode = .Constant } },
-                .{ .chunk = .{ .Constant = 2 }, .constant = 15 },
+                .{ .chunk = .{ .Constant = 2 }, .constant = .{ .Number = 15 } },
                 .{ .chunk = .{ .OpCode = .Multiply } },
                 .{ .chunk = .{ .OpCode = .Constant } },
-                .{ .chunk = .{ .Constant = 3 }, .constant = 20 },
+                .{ .chunk = .{ .Constant = 3 }, .constant = .{ .Number = 20 } },
                 .{ .chunk = .{ .OpCode = .Divide } },
                 .{ .chunk = .{ .OpCode = .Add } },
                 .{ .chunk = .{ .OpCode = .Return } },
@@ -321,9 +321,9 @@ test "compile expressions" {
             .source = "10 == 10",
             .expected = &[_]TestInstruction{
                 .{ .chunk = .{ .OpCode = .Constant } },
-                .{ .chunk = .{ .Constant = 0 }, .constant = 10 },
+                .{ .chunk = .{ .Constant = 0 }, .constant = .{ .Number = 10 } },
                 .{ .chunk = .{ .OpCode = .Constant } },
-                .{ .chunk = .{ .Constant = 1 }, .constant = 10 },
+                .{ .chunk = .{ .Constant = 1 }, .constant = .{ .Number = 10 } },
                 .{ .chunk = .{ .OpCode = .Equal } },
                 .{ .chunk = .{ .OpCode = .Return } },
             },
@@ -341,14 +341,14 @@ test "compile expressions" {
             .source = "!(5 - 4 > 3 * 2 == !nil)",
             .expected = &[_]TestInstruction{
                 .{ .chunk = .{ .OpCode = .Constant } },
-                .{ .chunk = .{ .Constant = 0 }, .constant = 5 },
+                .{ .chunk = .{ .Constant = 0 }, .constant = .{ .Number = 5 } },
                 .{ .chunk = .{ .OpCode = .Constant } },
-                .{ .chunk = .{ .Constant = 1 }, .constant = 4 },
+                .{ .chunk = .{ .Constant = 1 }, .constant = .{ .Number = 4 } },
                 .{ .chunk = .{ .OpCode = .Subtract } },
                 .{ .chunk = .{ .OpCode = .Constant } },
-                .{ .chunk = .{ .Constant = 2 }, .constant = 3 },
+                .{ .chunk = .{ .Constant = 2 }, .constant = .{ .Number = 3 } },
                 .{ .chunk = .{ .OpCode = .Constant } },
-                .{ .chunk = .{ .Constant = 3 }, .constant = 2 },
+                .{ .chunk = .{ .Constant = 3 }, .constant = .{ .Number = 2 } },
                 .{ .chunk = .{ .OpCode = .Multiply } },
                 .{ .chunk = .{ .OpCode = .Greater } },
                 .{ .chunk = .{ .OpCode = .Nil } },
@@ -375,8 +375,10 @@ test "compile expressions" {
 
         var chunk = try Chunk.init(allocator);
         defer chunk.deinit();
+        var vm = VM.init(allocator, &chunk);
+        defer vm.deinit();
 
-        var compiler = try init(allocator, source, &chunk);
+        var compiler = try init(allocator, &vm, source, &chunk);
         defer compiler.deinit();
         compiler.compile();
 

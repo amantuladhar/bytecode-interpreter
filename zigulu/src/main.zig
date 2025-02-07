@@ -5,6 +5,7 @@ const Chunk = @import("chunk.zig");
 const Compiler = @import("Compiler.zig");
 const Allocator = std.mem.Allocator;
 const OpCode = Chunk.OpCode;
+const HashMap = @import("HashMap.zig");
 
 pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
@@ -24,7 +25,7 @@ fn repl(allocator: Allocator) !void {
     var chunk = try Chunk.init(allocator);
     defer chunk.deinit();
 
-    var vm = VM.init(&chunk);
+    var vm = VM.init(allocator, &chunk);
     defer vm.deinit();
 
     var compiler = try Compiler.init(allocator, &vm, line[0..read_count], &chunk);

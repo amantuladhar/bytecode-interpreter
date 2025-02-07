@@ -4,6 +4,7 @@ const VM = @import("vm.zig");
 const Chunk = @import("chunk.zig");
 const ValueArr = @import("ValueArr.zig");
 const object = @import("object.zig");
+const HashMap = @import("HashMap.zig");
 const Obj = object.Obj;
 const ObjString = object.ObjString;
 const disassembleInstruction = @import("debug.zig").disassembleInstruction;
@@ -22,13 +23,15 @@ chunk: *Chunk,
 ip: usize,
 stack: [MAX_STACK_SIZE]Value = undefined,
 stack_top: usize,
+strings: HashMap,
 objects: ?*Obj = null,
 
-pub fn init(chunk: *Chunk) Self {
+pub fn init(allocator: Allocator, chunk: *Chunk) Self {
     return Self{
         .chunk = chunk,
         .ip = 0,
         .stack_top = 0,
+        .strings = HashMap.init(allocator),
     };
 }
 
@@ -39,9 +42,17 @@ pub fn deinit(self: *Self) void {
     var next_obj = self.objects;
     while (next_obj) |obj| {
         const next = obj.next;
-        obj.deinit();
+        // strings are saved on strings map - and it owns the string.
+        if (obj.value != .String) {
+            obj.deinit();
+        } else {
+            // Still need to destroy "Wrapper" obj
+            // Ahh... memory management is hard....
+            obj.allocator.destroy(obj);
+        }
         next_obj = next;
     }
+    self.strings.deinit();
 }
 
 pub fn interpret(self: *Self, allocator: Allocator, vm: *VM) !InterpretResult {
@@ -74,7 +85,7 @@ pub fn interpret(self: *Self, allocator: Allocator, vm: *VM) !InterpretResult {
                 if (inst.OpCode == .Add and av == .Obj and av.Obj.*.value == .String) {
                     const b = bv.Obj.*.value.String;
                     const a = av.Obj.*.value.String;
-                    const join_str = ObjString.concatenate(allocator, a.value, b.value) catch unreachable;
+                    const join_str = ObjString.concatenate(allocator, &vm.strings, a.value, b.value) catch unreachable;
                     const obj = object.Obj.init(allocator, vm, .{ .String = join_str }) catch unreachable;
                     self.push(.{ .Obj = obj });
                 } else {
@@ -151,24 +162,25 @@ test "test vm" {
     var chunk = try Chunk.init(allocator);
     defer chunk.deinit();
 
-    try chunk.writeConstant(1.2, 123);
-    try chunk.writeConstant(2.3, 123);
+    try chunk.writeConstant(.{ .Number = 1.2 }, 123);
+    try chunk.writeConstant(.{ .Number = 2.3 }, 123);
     try chunk.write(.{ .OpCode = .Add }, 123);
 
-    try chunk.writeConstant(2.3, 123);
+    try chunk.writeConstant(.{ .Number = 2.3 }, 123);
     try chunk.write(.{ .OpCode = .Subtract }, 123);
 
-    try chunk.writeConstant(1.2, 123);
+    try chunk.writeConstant(.{ .Number = 1.2 }, 123);
     try chunk.write(.{ .OpCode = .Divide }, 123);
 
-    try chunk.writeConstant(10, 123);
+    try chunk.writeConstant(.{ .Number = 10 }, 123);
     try chunk.write(.{ .OpCode = .Multiply }, 123);
 
     try chunk.write(.{ .OpCode = .Negate }, 123);
     try chunk.write(.{ .OpCode = .Return }, 123);
 
-    var vm = init(&chunk);
-    _ = vm.interpret();
+    var vm = init(allocator, &chunk);
+    defer vm.deinit();
+    _ = try vm.interpret(allocator, &vm);
 
     try testing.expect(true);
 }
