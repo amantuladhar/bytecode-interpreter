@@ -10,6 +10,12 @@
 #include "debug.h"
 #endif
 
+static void declaration();
+static void statement();
+static void printStatement();
+static bool match(TokenType type);
+static bool check(TokenType type);
+
 typedef struct {
     Token current;
     Token previous;
@@ -236,8 +242,36 @@ bool Compiler_compile(const char* source, Chunk* chunk) {
     parser.panicMode = false;
 
     advance();
-    expression();
-    consume(TOKEN_EOF, "Expect end of expression");
+    while (!match(TOKEN_EOF)) {
+        declaration();
+    }
+    // expression();
+    // consume(TOKEN_EOF, "Expect end of expression");
     endCompiler();
     return !parser.hadError;
+}
+
+static void declaration() { statement(); }
+
+static void statement() {
+    if (match(TOKEN_PRINT)) {
+        printStatement();
+    }
+}
+
+static bool match(TokenType type) {
+    if (!check(type))
+        return false;
+    advance();
+    return true;
+}
+
+static bool check(TokenType type) {
+    return parser.current.type == type;
+}
+
+static void printStatement() {
+    expression();
+    consume(TOKEN_SEMICOLON, "Expect ';' after value");
+    emitByte(OP_PRINT);
 }

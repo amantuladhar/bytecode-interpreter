@@ -2,11 +2,11 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "memory.h"
 #include "chunk.h"
 #include "common.h"
 #include "compiler.h"
 #include "debug.h"
+#include "memory.h"
 #include "value.h"
 #include "vm.h"
 
@@ -20,7 +20,6 @@ void initVM() {
     resetStack();
     vm.objects = NULL;
     Table_init(&vm.strings);
-
 }
 
 void freeVM() {
@@ -38,13 +37,9 @@ Value pop() {
     return *vm.stackTop;
 }
 
-static Value peek(int distance) {
-    return vm.stackTop[-1 - distance];
-}
+static Value peek(int distance) { return vm.stackTop[-1 - distance]; }
 
-static bool isFalsey(Value value) {
-    return IS_NIL(value) || (IS_BOOL(value) && !AS_BOOL(value));
-}
+static bool isFalsey(Value value) { return IS_NIL(value) || (IS_BOOL(value) && !AS_BOOL(value)); }
 
 static void concatenate() {
     Value x = pop();
@@ -137,9 +132,15 @@ static InterpretResult run() {
                 push(NUMBER_VAL(-AS_NUMBER(pop())));
                 break;
             }
-            case OP_RETURN: {
+            case OP_PRINT: {
                 Value_printValue(pop());
                 printf("\n");
+                break;
+            }
+            case OP_RETURN: {
+                // Exit interpreter
+                // Value_printValue(pop());
+                // printf("\n");
                 return INTERPRET_OK;
             }
             case OP_NIL: push(NIL_VAL); break;
@@ -160,9 +161,7 @@ static InterpretResult run() {
 #undef BINARY_OP
 }
 
-static void resetStack() {
-    vm.stackTop = vm.stack;
-}
+static void resetStack() { vm.stackTop = vm.stack; }
 
 static void runtimeError(const char* format, ...) {
     va_list args;
