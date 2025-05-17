@@ -13,8 +13,10 @@
 static void declaration();
 static void statement();
 static void printStatement();
+static void expressionStatement();
 static bool match(TokenType type);
 static bool check(TokenType type);
+static void synchronize();
 
 typedef struct {
     Token current;
@@ -251,11 +253,18 @@ bool Compiler_compile(const char* source, Chunk* chunk) {
     return !parser.hadError;
 }
 
-static void declaration() { statement(); }
+static void declaration() {
+    statement();
+    if (parser.panicMode) {
+        synchronize();
+    }
+}
 
 static void statement() {
     if (match(TOKEN_PRINT)) {
         printStatement();
+    } else {
+        expressionStatement();
     }
 }
 
@@ -266,12 +275,38 @@ static bool match(TokenType type) {
     return true;
 }
 
-static bool check(TokenType type) {
-    return parser.current.type == type;
-}
+static bool check(TokenType type) { return parser.current.type == type; }
 
 static void printStatement() {
     expression();
     consume(TOKEN_SEMICOLON, "Expect ';' after value");
     emitByte(OP_PRINT);
+}
+
+static void expressionStatement() {
+    expression();
+    consume(TOKEN_SEMICOLON, "Expect ';' after expression");
+    emitByte(OP_POP);
+}
+
+static void synchronize() {
+    parser.panicMode = false;
+    while (parser.current.type != TOKEN_EOF) {
+        if (parser.previous.type == TOKEN_SEMICOLON)
+            return;
+        switch (parser.current.type) {
+            case TOKEN_CLASS:
+            case TOKEN_FUN:
+            case TOKEN_VAR:
+            case TOKEN_FOR:
+            case TOKEN_IF:
+            case TOKEN_WHILE:
+            case TOKEN_PRINT:
+            case TOKEN_RETURN: return;
+            default:
+                /*Nothing*/
+                ;
+        }
+        advance();
+    }
 }
